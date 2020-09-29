@@ -10,6 +10,10 @@ def get_texts(path):
         texts = f.readlines()
     return texts
 
+def label_point(x, y, val, ax):
+    a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
+    for i, point in a.iterrows():
+        ax.text(point['x']+.02, point['y'], str(point['val']))
 
 if __name__ == '__main__':
     try:
@@ -76,5 +80,7 @@ if __name__ == '__main__':
     for i in example4:
         embeddings.append(model.wv[i])
     results = pca.fit_transform(embeddings)
+    for i, j in zip(example4, results):
+        plt.annotate(i, j, family="SimHei")
     sns.scatterplot(x=results[:, 0], y=results[:, 1])
     plt.show()
