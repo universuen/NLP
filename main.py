@@ -1,5 +1,8 @@
 import jieba
 from gensim.models import Word2Vec
+from sklearn.decomposition import PCA
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def get_texts(path):
@@ -9,17 +12,20 @@ def get_texts(path):
 
 
 if __name__ == '__main__':
-    # 获取语料库
-    texts = get_texts("exp1_corpus.txt")
-
-    # 使用jieba进行分词
-    seqs_list = []
-    for i in texts:
-        seq = [word for word in jieba.cut(i)]
-        seqs_list.append(seq)
-
-    # 训练词向量
-    model = Word2Vec(seqs_list, size=100, window=5, min_count=1, workers=4)
+    try:
+        model = Word2Vec.load("w2v.model")
+    except Exception as e:
+        # 获取语料库
+        texts = get_texts("exp1_corpus.txt")
+        # 使用jieba进行分词
+        seqs_list = []
+        for i in texts:
+            seq = [word for word in jieba.cut(i)]
+            seqs_list.append(seq)
+        # 训练词向量
+        print(e)
+        model = Word2Vec(seqs_list, size=100, window=5, min_count=1, workers=4)
+        model.save("w2v.model")
 
     # 使用词向量对指定词进行相关性比较
     print("相关性比较:")
@@ -28,7 +34,7 @@ if __name__ == '__main__':
         ("武汉", "郑州")
     ]
     for i in example1:
-        print(i, model.similarity(i))
+        print(i, model.wv.similarity(i[0], i[1]))
 
     print("********************")
 
@@ -51,8 +57,8 @@ if __name__ == '__main__':
             "negative": ["武汉"]
         },
         {
-            "positive": ["河南", "南京"],
-            "negative": ["郑州"]
+            "positive": ["广西", "济南"],
+            "negative": ["南宁"]
         }
     ]
     for i in example3:
@@ -60,3 +66,15 @@ if __name__ == '__main__':
         print("negative: %s" % i["negative"])
         print(model.wv.most_similar(positive=i["positive"], negative=i["negative"], topn=5))
 
+    print("********************")
+
+    # 词向量降维与可视化
+    example4 = ['江苏', '南京', '成都', '四川', '湖北', '武汉', '河南', '郑州', '甘肃', '兰州', '湖南', '长沙', '陕西', '西安', '吉林', '长春', '广东',
+                  '广州', '浙江', '杭州']
+    pca = PCA(n_components=2)
+    embeddings = []
+    for i in example4:
+        embeddings.append(model.wv[i])
+    results = pca.fit_transform(embeddings)
+    sns.scatterplot(x=results[:, 0], y=results[:, 1])
+    plt.show()
