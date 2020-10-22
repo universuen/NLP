@@ -14,6 +14,7 @@ if __name__ == '__main__':
     try:
         model = Word2Vec.load("w2v.model")
     except Exception as e:
+        print(e)
         # 获取语料库
         texts = get_texts("exp1_corpus.txt")
         # 使用jieba进行分词
@@ -22,15 +23,15 @@ if __name__ == '__main__':
             seq = [word for word in jieba.cut(i)]
             seqs_list.append(seq)
         # 训练词向量
-        print(e)
         model = Word2Vec(seqs_list, size=100, window=5, min_count=1, workers=4)
+        # 保存模型
         model.save("w2v.model")
 
     # 使用词向量对指定词进行相关性比较
     print("相关性比较:")
     example1 = [
         ("中华", "中国"),
-        ("武汉", "郑州")
+        ("习近平", "维尼")
     ]
     for i in example1:
         print(i, model.wv.similarity(i[0], i[1]))
@@ -52,12 +53,12 @@ if __name__ == '__main__':
     print("词类相似词:")
     example3 = [
         {
-            "positive": ["湖北", "成都"],
+            "positive": ["湖北", "郑州"],
             "negative": ["武汉"]
         },
         {
-            "positive": ["广西", "济南"],
-            "negative": ["南宁"]
+            "positive": ["辽宁", "济南"],
+            "negative": ["沈阳"]
         }
     ]
     for i in example3:
@@ -68,8 +69,8 @@ if __name__ == '__main__':
     print("********************")
 
     # 词向量降维与可视化
-    example4 = ['江苏', '南京', '成都', '四川', '湖北', '武汉', '河南', '郑州', '甘肃', '兰州', '湖南', '长沙', '陕西', '西安', '吉林', '长春', '广东',
-                  '广州', '浙江', '杭州']
+    example4 = ['江苏', '南京', '成都', '四川', '湖北', '武汉', '河南', '郑州', '甘肃', '兰州', '湖南', '长沙', '陕西', '西安',
+                '吉林', '长春', '广东','广州', '浙江', '杭州']
     pca = PCA(n_components=2)
     embeddings = []
     for i in example4:
