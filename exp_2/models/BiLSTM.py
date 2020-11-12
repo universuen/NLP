@@ -14,7 +14,23 @@ class Model(nn.Module):
     def forward(self, x):
         emb = self.embedding(x)  # (B, L) -> (B, L, D)
         emb = self.dropout(emb)
-        lstm_out, _ = self.lstm(emb)  # (B, L, H * 2)
-        out = self.hidden2label(lstm_out[:, -1, :])  # (B, H * 2) -> (B, 2)
+        lstm_out, _ = self.lstm(emb)  # (B, L, D) -> (B, L, H)
+        out = self.hidden2label(lstm_out[:, -1, :])  # (B, L, H) -> (B, H) -> (B, 2)
         out = F.log_softmax(out, dim=-1)
         return out
+
+
+# if __name__ == '__main__':
+#     a = [
+#         [
+#             [1, 1, 1],
+#             [2, 2, 2]
+#         ],
+#         [
+#             [3, 3, 3],
+#             [4, 4, 4]
+#         ]
+#     ]
+#     import torch
+#     a = torch.tensor(a)
+#     print(a[:, -1, :])

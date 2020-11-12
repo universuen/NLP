@@ -1,9 +1,15 @@
-import torch
-import torch.autograd as autograd
-import torch.nn as nn
-import torch.optim as optim
+from exp_3.models import BiLSTM, BiLSTM_CRF
 
-START_TAG = "<START>"
-STOP_TAG = "<STOP>"
-EMBEDDING_DIM = 300  # 由于标签一共有B\I\O\START\STOP 5个，所以embedding_dim为5
-HIDDEN_DIM = 256  # 这其实是BiLSTM的隐藏层的特征数量，因为是双向所以是2倍，单向为2
+"""Data Path"""
+
+TRAINING_DATA = "./conll04/conll04_train.json"
+TESTING_DATA = "./conll04/conll04_test.json"
+
+"""Model Parameters"""
+
+MODEL = BiLSTM.Model
+EMBEDDING_SIZE = 300
+HIDDEN_SIZE = 256
+LEARNING_RATE = 0.1
+WEIGHT_DECAY = 1e-4
+EPOCHS = 1

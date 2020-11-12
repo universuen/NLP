@@ -1,40 +1,27 @@
-import json
-from exp_3.models import BiLSTM
+import torch.optim as optim
 from exp_3.config import *
-
-
-def load_data(file_path):
-    result = list()
-    data = json.load(open(file_path, 'r', encoding='utf-8'))
-    for i in data:
-        temp_result = list()
-        tokens = i['tokens']
-        temp_result.append(tokens)
-        temp_label = ['O'] * len(tokens)
-        entities = i['entities']
-        for e in entities:
-            e_type = e['type']
-            e_start = e['start']
-            e_end = e['end']
-            temp_label[e_start] = 'B-' + e_type
-            temp_label[e_start + 1: e_end] = ['I-' + e_type] * (e_end - e_start - 1)
-        temp_result.append(temp_label)
-        result.append(temp_result)
-    return result[:50]
-
-
-def prepare_sequence(seq, to_ix):
-    idxs = [to_ix[w] for w in seq]
-    return torch.tensor(idxs, dtype=torch.long)
+from exp_3.utilities import *
 
 
 if __name__ == '__main__':
-    training_data = load_data("./conll04/conll04_train.json")
+    """load the data"""
+
+    training_data = load_data(TRAINING_DATA)
+    testing_data = load_data(TESTING_DATA)
+
+    """prepare necessary dictionaries"""
+
+    # make word-to-index dictionary
     word_to_ix = {}
     for sentence, tags in training_data:
         for word in sentence:
             if word not in word_to_ix:
                 word_to_ix[word] = len(word_to_ix)
+    for sentence, tags in testing_data:
+        for word in sentence:
+            if word not in word_to_ix:
+                word_to_ix[word] = len(word_to_ix)
+    # make tag-to-index dictionary
     tag_to_ix = {
         'B-Loc': 0,
         'I-Loc': 1,
@@ -45,44 +32,70 @@ if __name__ == '__main__':
         'B-Other': 6,
         'I-Other': 7,
         'O': 8,
-        START_TAG: 9,
-        STOP_TAG: 10
+        # the below items are only used in BiLSTM_CRF
+        '<START>': 9,
+        '<STOP>': 10
     }
+
+    """initialization"""
+
+    # instantiate a model
     model = BiLSTM.Model(
         vocab_size=len(word_to_ix),
         tag_to_ix=tag_to_ix,
-        embedding_dim=EMBEDDING_DIM,
-        hidden_dim=HIDDEN_DIM
+        embedding_size=EMBEDDING_SIZE,
+        hidden_size=HIDDEN_SIZE
     )
-    optimizer = optim.SGD(model.parameters(), lr=0.01, weight_decay=1e-4)
+    # instantiate a optimizer
+    optimizer = optim.SGD(
+        params=model.parameters(),
+        lr=LEARNING_RATE,
+        weight_decay=WEIGHT_DECAY
+    )
+    # instantiate a evaluator
+    evaluator = Evaluator(
+        model=model,
+        testing_data=testing_data,
+        word_to_ix=word_to_ix,
+        tag_to_ix=tag_to_ix
+    )
+    print(
+        f"*****Parameters*****\n"
+        f"> Model: {model.name}\n"
+        f"> Embedding Size: {EMBEDDING_SIZE}\n"
+        f"> Hidden Size: {HIDDEN_SIZE}\n"
+        f"> Learning Rate: {LEARNING_RATE}\n"
+        f"> Weight decay: {WEIGHT_DECAY}\n"
+        f"> Epochs: {EPOCHS}\n"
+        f"********************\n"
+    )
 
-    # if torch.cuda.is_available():
-    #     model = model.cuda()
+    """train the model"""
 
-    for epoch in range(10):  # again, normally you would NOT do 300 epochs, it is toy data
-        print(epoch)
+    print('Started Training')
+    for epoch in range(EPOCHS):
+        running_loss = 0.0
         for sentence, tags in training_data:
-            # Step 1. Remember that Pytorch accumulates gradients.
-            # We need to clear them out before each instance
-            model.zero_grad()
+            model.zero_grad()  # reset the gradient
+            inputs = preprocess(sentence, word_to_ix)
+            targets = preprocess(tags, tag_to_ix)
+            loss = model.criterion(inputs, targets)  # criterion method includes the forward method
+            loss.backward()  # calculate the gradient depending on the loss
+            optimizer.step()  # apply the calculated gradient
+            running_loss += loss.item()
+        print(f"> epoch: {epoch + 1}, loss: {running_loss / len(training_data): .5f}")
+    print('Finished Training\n')
 
-            # Step 2. Get our inputs ready for the network, that is,
-            # turn them into Tensors of word indices.
-            sentence_in = prepare_sequence(sentence, word_to_ix)
-            targets = torch.tensor([tag_to_ix[t] for t in tags], dtype=torch.long)
+    """evaluate the model"""
 
-            # Step 3. Run our forward pass.
-            loss = model.neg_log_likelihood(sentence_in, targets)
-
-            # Step 4. Compute the loss, gradients, and update the parameters by
-            # calling optimizer.step()
-            loss.backward()
-            optimizer.step()
-
-    # Check predictions after training
-    with torch.no_grad():
-        for i in range(10):
-            precheck_sent = prepare_sequence(training_data[i][0], word_to_ix)
-            precheck_tags = torch.tensor([tag_to_ix[t] for t in training_data[i][1]], dtype=torch.long)
-            print(model(precheck_sent))
-            print(precheck_tags)
+    print('Started Evaluating')
+    evaluator.evaluate()  # calculate the evaluating scores
+    print('Finished Evaluating\n')
+    print(
+        f"*****Evaluation*****\n"
+        f"> Accuracy: {evaluator.accuracy:.5f}\n"
+        f"> Precision: {evaluator.precision:.5f}\n"
+        f"> Recall: {evaluator.recall:.5f}\n"
+        f"> F1: {evaluator.f1:.5f}\n"
+        f"********************\n"
+    )
