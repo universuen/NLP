@@ -4,6 +4,7 @@ import torch.nn.functional as func
 
 
 class Model(nn.Module):
+
     def __init__(self, vocab_size, tag_to_ix, embedding_size, hidden_size, dropout=0.2):
         super(Model, self).__init__()
         self.name = "BiLSTM"
@@ -11,7 +12,6 @@ class Model(nn.Module):
         self.dropout = nn.Dropout(0.1)
         self.lstm = nn.LSTM(embedding_size, hidden_size // 2, bidirectional=True, batch_first=True)
         self.hidden2label = nn.Linear(hidden_size, len(tag_to_ix))
-        # self.tag_to_ix = tag_to_ix
 
     def criterion(self, x, targets):
         criterion = nn.NLLLoss()

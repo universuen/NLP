@@ -6,8 +6,8 @@ START_TAG = "<START>"
 STOP_TAG = "<STOP>"
 
 
+# return the argmax as a python int
 def argmax(vec):
-    # return the argmax as a python int
     _, idx = torch.max(vec, 1)
     return idx.item()
 

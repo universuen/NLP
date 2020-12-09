@@ -10,6 +10,7 @@ def get_texts(path):
         texts = f.readlines()
     return texts
 
+
 if __name__ == '__main__':
     try:
         model = Word2Vec.load("w2v.model")
@@ -70,7 +71,7 @@ if __name__ == '__main__':
 
     # 词向量降维与可视化
     example4 = ['江苏', '南京', '成都', '四川', '湖北', '武汉', '河南', '郑州', '甘肃', '兰州', '湖南', '长沙', '陕西', '西安',
-                '吉林', '长春', '广东','广州', '浙江', '杭州']
+                '吉林', '长春', '广东', '广州', '浙江', '杭州']
     pca = PCA(n_components=2)
     embeddings = []
     for i in example4:

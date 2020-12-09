@@ -4,6 +4,7 @@ from exp_3.utilities import *
 
 
 if __name__ == '__main__':
+
     """load the data"""
 
     training_data = load_data(TRAINING_DATA)
@@ -40,7 +41,7 @@ if __name__ == '__main__':
     """initialization"""
 
     # instantiate a model
-    model = BiLSTM.Model(
+    model = MODEL(
         vocab_size=len(word_to_ix),
         tag_to_ix=tag_to_ix,
         embedding_size=EMBEDDING_SIZE,
