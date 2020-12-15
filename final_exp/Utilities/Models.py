@@ -1,6 +1,7 @@
-from tensorflow.keras.optimizers import Adam
+# from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Conv1D, LSTM, Dense, GlobalMaxPooling1D, GlobalAveragePooling1D, Input, Bidirectional, \
+from tensorflow.keras.layers import Conv1D, LSTM, Dense, GlobalMaxPooling1D, GlobalAveragePooling1D, Input, \
+    Bidirectional, \
     concatenate, SpatialDropout1D
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.utils import to_categorical
@@ -9,13 +10,14 @@ import numpy as np
 
 
 class Models:
+
     def __init__(self, max_seq_len, vocabulary_size, embedding_size, embedding_matrix):
         inp = Input(shape=(max_seq_len,))
 
         x = Embedding(vocabulary_size + 1, embedding_size, weights=[embedding_matrix], trainable=True)(inp)
         x = SpatialDropout1D(0.2)(x)
         x = Bidirectional(LSTM(128, return_sequences=True))(x)
-        x = Conv1D(64, kernel_size=2, padding="valid", kernel_initializer="he_uniform")(x)
+        x = Conv1D(64, kernel_size=3, padding="valid", kernel_initializer="he_uniform")(x)
         avg_pool = GlobalAveragePooling1D()(x)
         max_pool = GlobalMaxPooling1D()(x)
         x = concatenate([avg_pool, max_pool])
@@ -34,13 +36,13 @@ class Models:
         :param summary:是否显示模型概要
         :return:
         """
-        self.model_a.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.001), metrics=["accuracy"])
+        self.model_a.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
         self.model_b.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
         self.model_c.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-        if summary is False:
+        if summary is True:
             self.model_a.summary()
-            # self.model_b.summary()
-            # self.model_c.summary()
+            self.model_b.summary()
+            self.model_c.summary()
 
     def train(self, model_name, training_x, training_labels, validation_x, validation_labels, epochs=10):
         """

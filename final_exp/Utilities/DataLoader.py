@@ -51,7 +51,7 @@ def clean_data(tweet):
     return " ".join(clean_tweet)
 
 
-def balence_data(x_train, y_train, ratio_down_over_up=0.5):
+def balance_data(x_train, y_train, ratio_down_over_up=0.5):
     x_train = list(x_train)
     y_train = list(y_train)
 
@@ -120,7 +120,7 @@ class DataLoader:
         # 词袋大小
         self.vocabulary_size = 0
 
-    def activate(self):
+    def load(self):
         """
         计算并处理所需的全部数据
         :return:
@@ -189,9 +189,9 @@ class DataLoader:
 
         # 对训练集进行上采样或下采样，均衡化每种标签的训练集大小
         print("Balancing training data")
-        self.training_a.x, self.training_a.labels = balence_data(self.training_a.x, self.training_a.labels, 0.3)
-        self.training_b.x, self.training_b.labels = balence_data(self.training_b.x, self.training_b.labels, 0.2)
-        self.training_c.x, self.training_c.labels = balence_data(self.training_c.x, self.training_c.labels, 0.7)
+        self.training_a.x, self.training_a.labels = balance_data(self.training_a.x, self.training_a.labels, 0.3)
+        self.training_b.x, self.training_b.labels = balance_data(self.training_b.x, self.training_b.labels, 0.2)
+        self.training_c.x, self.training_c.labels = balance_data(self.training_c.x, self.training_c.labels, 0.7)
 
     def _embed(self):
         """
@@ -240,15 +240,15 @@ class DataLoader:
 
         # 清洗数据并进行词向量映射得到输入序列x
         print("Cleaning test data")
-        test_data_a["clean data"] = test_data_a.tweet.apply(lambda x: clean_data(x)[0])
+        test_data_a["clean data"] = test_data_a.tweet.apply(lambda x: clean_data(x))
         sequences = self._tokenizer.texts_to_sequences(test_data_a["clean data"])
         self.test_a.x = pad_sequences(sequences, maxlen=self.max_seq_len)
 
-        test_data_b["clean data"] = test_data_b.tweet.apply(lambda x: clean_data(x)[0])
+        test_data_b["clean data"] = test_data_b.tweet.apply(lambda x: clean_data(x))
         sequences = self._tokenizer.texts_to_sequences(test_data_b["clean data"])
         self.test_b.x = pad_sequences(sequences, maxlen=self.max_seq_len)
 
-        test_data_c["clean data"] = test_data_c.tweet.apply(lambda x: clean_data(x)[0])
+        test_data_c["clean data"] = test_data_c.tweet.apply(lambda x: clean_data(x))
         sequences = self._tokenizer.texts_to_sequences(test_data_c["clean data"])
         self.test_c.x = pad_sequences(sequences, maxlen=self.max_seq_len)
 
